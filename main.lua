@@ -1,3 +1,4 @@
+math.randomseed(os.time())
 -- carrega
 function love.load () 
 
@@ -5,23 +6,45 @@ function love.load ()
   love.window.setMode(980, 640, {resizable=true, vsync=false, minwidth=980, minheight=640});  
   WIDTH = love.graphics.getWidth();
   HEIGHT = love.graphics.getHeight();
-
+  
   -- background
   background = love.graphics.newImage('imagens/hamtaro/background.jpg');
+  
+  -- largura e altura do cenário
+  WIDTH_CENARIO = WIDTH - 300;
+  HEIGHT_CENARIO = HEIGHT - 200;
+    
+  -- retângulo onde a cobra pode se movimentar
+  cenarioSnake = love.graphics.newImage("imagens/cenario.png");
 
-  -- circulo
-  circulo = love.graphics.newImage ("imagens/hamtaro/hamster2.png");
+  --  cobrinha
+  snake = {};
+  snake[1] = love.graphics.newImage ("imagens/hamtaro/hamster1.png");
+  snake[2] = love.graphics.newImage ("imagens/hamtaro/hamster2.png");
+  snake[3] = love.graphics.newImage ("imagens/hamtaro/hamster3.png"); 
+  
+  --
+  WIDTH_SNAKE = snake[1]:getWidth();
 
-  -- coordenada de posição x, e velocidade
-  x = 100;
-  y = 50;
-  speed = 300;
+  -- coordenada de posição x, y e velocidade
+  x = 155;
+  y = 155;
+  speed = 150;
+  start = false;
+  snakeSize = 3;
+  
+   -- snake sorteados    
+  snakeSorteados = {};
+  for i = 1, 3 do
+    local idx = math.random(#snake);
+     snakeSorteados[i] = snake[idx];
+  end
 
 end
 
 -- atualiza
 function love.update(dt) 
-
+  
   if love.keyboard.isDown ("d") then
     x = x + (speed * dt);
   elseif love.keyboard.isDown ("right") then
@@ -50,88 +73,39 @@ end
 
 -- desenha
 function love.draw() 
-  --  obtendo largura e altura
+  -- obtendo largura e altura da janela
   WIDTH = love.graphics.getWidth();
   HEIGHT = love.graphics.getHeight();
 
-  -- background
+  -- definindo a escala do background(janela)
   local scaleX = WIDTH / background:getWidth();
   local scaleY = HEIGHT / background:getHeight();
-  love.graphics.draw(background, 0, 0, 0, scaleX, scaleY);
-
-  -- circulo
-  love.graphics.draw(circulo, x, y);
-end
-
---[[
-
-
-function love.load()
-    
-  fundo = love.graphics.newImage("imagens/universo.jpg");
   
-  player1 = {
-    x = 390,
-    y = 300,
-    width = 50,
-    height = 50,
-    collided = false
-  }
-  box1 = {
-    x = 100,
-    y = 300,
-    width = 50,
-    height = 50
-  }
-  box2 = {
-    x = 650,
-    y = 275,
-    width = 100,
-    height = 100
-  }
+  -- desenha o background
+  love.graphics.draw(background, 0, 0, 0, scaleX, scaleY);
+  
+  -- largura e altura do cenário
+  WIDTH_CENARIO = WIDTH - 300;
+  HEIGHT_CENARIO = HEIGHT - 200;
+  
+  -- definindo a escala do cenário
+  local scaleCenarioX = WIDTH_CENARIO / cenarioSnake:getWidth();
+  local scaleCenarioY = HEIGHT_CENARIO / cenarioSnake:getHeight();
+  
+  -- desenha cenário
+  love.graphics.draw(cenarioSnake, 150, 150, 0, scaleCenarioX, scaleCenarioY);
+  
+  WIDTH_SNAKE = snake[1]:getWidth();
+  
+  -- circulo da cobrinha  
+  print(snakeSize);
+  local j = x;
+  local i = 1;
+  while i <= snakeSize do
+    love.graphics.draw(snakeSorteados[i], j, y);   
+    j = j + WIDTH_SNAKE;
+    i = i + 1;
+  end  
+  
+ 
 end
-
-
-function CheckBoxCollision(x1,y1,w1,h1,x2,y2,w2,h2)
-  return x1 < x2+w2 and x2 < x1+w1 and y1 < y2+h2 and y2 < y1+h1
-end
-
-function love.update(dt)
-  if love.keyboard.isDown("left") then
-    player1.x = player1.x - (300 * dt)
-  end
-  if love.keyboard.isDown("right") then
-    player1.x = player1.x + (300 * dt)
-  end
-  if love.keyboard.isDown("up") then
-    player1.y = player1.y - (300 * dt)
-  end
-  if love.keyboard.isDown("down") then
-    player1.y = player1.y + (300 * dt)
-  end
-  if CheckBoxCollision(player1.x, player1.y, player1.width,
-    player1.height, box1.x, box1.y, box1.width, box1.height) or
-    CheckBoxCollision(player1.x, player1.y, player1.width,
-    player1.height, box2.x, box2.y, box2.width, box2.height) then
-    player1.collided = true
-  else
-    player1.collided = false
-  end
-end
-
-
-function love.draw()
-  love.graphics.setColor(255,255,255)
-  love.graphics.rectangle("fill", box1.x, box1.y,
-  box1.width, box1.height)
-  love.graphics.rectangle("fill", box2.x, box2.y,
-  box2.width, box2.height)
-  if player1.collided == true then
-    love.graphics.setColor(255,0,0)
-  end
-  love.graphics.rectangle("fill", player1.x, player1.y,
-  player1.width, player1.height)
-end
-
-]]--
-
