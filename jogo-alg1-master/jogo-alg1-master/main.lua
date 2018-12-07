@@ -106,6 +106,5 @@ function love.draw()
     j = j + WIDTH_SNAKE;
     i = i + 1;
   end  
-  
- 
+
 end
