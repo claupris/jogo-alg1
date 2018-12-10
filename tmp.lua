@@ -29,8 +29,6 @@ function love.load ()
   -- width_snake = largura da cobrinha
   WIDTH_SNAKE = snake[1]:getWidth();
 
-  WIDTH_FOOD = semente:getWidth();
-
   -- coordenada de posição x, y e velocidade da cobrinha
   x = 155;
   y = 155;
@@ -46,14 +44,11 @@ function love.load ()
   current = {};
   prox = {};
 
-  -- config comida (food) iniciais
-  intersect = false;
-  noFood = {semente, nil, nil};
-
-  -- config dos pontos
-  score = 0;
-
+  increase = 1;
+  decrease = 1;
   temp = {};
+  --           1    2    3    4    5    6    7    8    9   10
+  listTemp = {nil, nil, nil, nil, nil, nil, nil, nil, nil, nil};
 
   startSnake();
 
@@ -63,6 +58,7 @@ end
 function love.update(dt)
   -- direção que o usuário dá para a cobrinha
   local tp = {};
+
   if (love.keyboard.isDown ("d") or love.keyboard.isDown ("right")) and current[2][1] ~= 'F'  and current[2][1] ~= 'B' then
     --x = x + (speed * dt);      
     if #temp == 0 then
@@ -75,8 +71,13 @@ function love.update(dt)
         tp[1][3]
       }  
       bodySnake[snakeSize][2][snakeSize] = temp;
+      local index = increase%(#listTemp + 1);
+      if index == 0 then
+        increase = 1;
+      end
+      listTemp[increase] = temp;
+      increase = increase + 1;
     end
-    print(dt);
   end
 
   if (love.keyboard.isDown ("a") or love.keyboard.isDown ("left")) and current[2][1] ~= 'F'  and current[2][1] ~= 'B' then
@@ -89,9 +90,14 @@ function love.update(dt)
         tp[1][2],
         tp[1][3]
       }  
-      bodySnake[snakeSize][2][snakeSize] = temp;
+      bodySnake[snakeSize][2][snakeSize] = temp; 
+      local index = increase%(#listTemp + 1);
+      if index == 0 then
+        increase = 1;
+      end
+      listTemp[increase] = temp;
+      increase = increase + 1;
     end
-    print(dt);
   end
 
   if (love.keyboard.isDown ("w") or love.keyboard.isDown ("up")) and current[2][1] ~= 'U'  and current[2][1] ~= 'D' then
@@ -105,8 +111,13 @@ function love.update(dt)
         tp[1][3]
       }  
       bodySnake[snakeSize][2][snakeSize] = temp;
+      local index = increase%(#listTemp + 1);
+      if index == 0 then
+        increase = 1;
+      end
+      listTemp[increase] = temp;
+      increase = increase + 1;
     end  
-    print(dt); 
   end
 
   if (love.keyboard.isDown ("s") or love.keyboard.isDown ("down")) and current[2][1] ~= 'U'  and current[2][1] ~= 'D'   then
@@ -119,9 +130,14 @@ function love.update(dt)
         tp[1][2],
         tp[1][3]
       }  
-      bodySnake[snakeSize][2][snakeSize] = temp; 
+      bodySnake[snakeSize][2][snakeSize] = temp;       
+      local index = increase%(#listTemp + 1);
+      if index == 0 then
+        increase = 1;
+      end
+      listTemp[increase] = temp;
+      increase = increase + 1;
     end
-    print(dt);
   end
 
   if love.keyboard.isDown ("return") then
@@ -178,16 +194,38 @@ function love.draw()
 --[[ ]]--
     if i < snakeSize then   
       prox[1] = bodySnake[i + 1][1][i + 1];
-      prox[2] = bodySnake[i + 1][2][i + 1];       
-      if prox[2][1] ~= current[2][1] then
+      prox[2] = bodySnake[i + 1][2][i + 1];      
+
+      local index = decrease%(#listTemp + 1);
+      if index == 0 then
+        decrease = 1;
+      end
+      
+      local dir = listTemp[decrease];
+
+      if dir ~= nil and prox[2][1] ~= dir[1] then
+        
         if start then
           print(i,' c ', current[2][1], current[1][2], current[1][3]);
           print(i + 1,' p ', prox[2][1], prox[2][2], prox[2][3]);
+          print('dir ', dir[1], dir[2]. dir[3]);
+          print('counters (i, d, s) ', increase, decrease, #listTemp);
           print('------------------------------------------');   
         end
-        if prox[2][2] == current[1][2] and prox[2][3] == current[1][3] then 
-          current[2]  = prox[2];
+        
+        if prox[2][2] == dir[2] and prox[2][3] == dir[3] then 
+          if #listTemp >= 1 then            
+            current[2]  = dir; 
+            
+            decrease = decrease + 1;            
+            print('array ', current[2][1], current[2][2], current[2][3]);
+          else
+            current[2]  = prox[2];
+            print('cte ', current[2][1], current[2][2], current[2][3]);
+          end
         end
+        
+        
       end
     end
 --[[ ]]--
@@ -195,7 +233,7 @@ function love.draw()
     if not start then
       love.graphics.draw(current[1][1], current[1][2], current[1][3]); 
     else
-      current = walkSnake();        
+      current = walkSnake();  
 
       love.graphics.draw(current[1][1], current[1][2], current[1][3]); 
     end
@@ -205,32 +243,16 @@ function love.draw()
 
     i = i + 1;
 
-    temp = {};
-
-  end
+  end  
 
   if not food then
-    love.graphics.print({{0, 0, 0, 1},'POINTS: ' .. score}, WIDTH_CENARIO/2 + 110, 100, 0, 2, 2);
-    love.graphics.print({{0, 0, 0, 1},'PUSH ENTER TO START'}, WIDTH_CENARIO/2, HEIGHT_CENARIO/2 + 120, 0, 2, 2);
-    noFood = positionFood();
+    semente_x, semente_y = positionFood();
   else
-    intersect = colision();
-    if intersect then
-      score = score + 50;      
-      noFood = positionFood();
-      addNoSnake();
-    end    
-    love.graphics.draw(noFood[1], noFood[2], noFood[3]);
-    love.graphics.print({{0, 0, 0, 1},'PONTOS: ' .. score}, WIDTH_CENARIO/2 + 110, 100, 0, 2, 2);
-  end
-
-  if not start and score > 0 then
-    love.graphics.print({{0, 0, 0, 1},'GAME OVER'}, WIDTH_CENARIO/2 + 90, HEIGHT_CENARIO/2 + 120, 0, 2, 2);
+    love.graphics.draw(semente, semente_x, semente_y);
   end
 
 end
 
--- reinicia uma nova partida 
 function startSnake()   
 
   x = 155;
@@ -246,18 +268,14 @@ function startSnake()
   current = {};
   prox = {};
 
-  -- config comida (food) iniciais
-  intersect = false;
-  noFood = {semente, nil, nil};
-
-  -- config dos pontos
-  score = 0;
-
+  increase = 1;
+  decrease = 1;
   temp = {};
+  listTemp = {};
 
   local px, py = x, y; 
 
-  for i = 1, snakeSize do
+  for i = 1, 3 do
     local idx = math.random(#snake);
 
     noSnake[i] = {};    
@@ -280,8 +298,6 @@ function startSnake()
 
 end
 
-
--- gera as posicoes da comida randomicamente
 function positionFood() 
   -- locais da semente
   semente_x = math.random(155, 150 + WIDTH_CENARIO);
@@ -300,10 +316,7 @@ function positionFood()
     semente_y = HEIGHT_CENARIO - 105;
   end   
 
-  noFood[2] = semente_x;
-  noFood[3] = semente_y;
-
-  return noFood;
+  return semente_x, semente_y;
 
 end
 
@@ -315,7 +328,6 @@ function walkSnake()
       current[1][2] = current[1][2] + 1;
     else
       start = false;
-
     end
   end
   if current[2][1] == 'B' then
@@ -323,7 +335,6 @@ function walkSnake()
       current[1][2] = current[1][2] - 1;
     else
       start = false;
-
     end
   end
   if current[2][1] == 'U' then
@@ -331,7 +342,6 @@ function walkSnake()
       current[1][3] = current[1][3] - 1;
     else
       start = false;
-
     end
   end
   if current[2][1] == 'D' then
@@ -339,56 +349,9 @@ function walkSnake()
       current[1][3] = current[1][3] + 1;
     else
       start = false;
-
     end
   end
   return {current[1], current[2]};   
-end
-
--- adicona no no na cobrinha
-function addNoSnake()
-  local head = {};
-  head[1] = bodySnake[snakeSize][1][snakeSize];
-  head[2] = bodySnake[snakeSize][2][snakeSize];
-  local idx = math.random(#snake);
-  
-  print('size ', snakeSize);
-
-  snakeSize = snakeSize + 1;
-
-  bodySnake[snakeSize] = {};
-
-  noSnake[snakeSize] = {};    
-  noSnake[snakeSize][1] = snake[idx];
-  if head[2][1] == 'F' or head[2][1] == 'B' then
-    noSnake[snakeSize][2] = head[1][2] + WIDTH_SNAKE;
-    noSnake[snakeSize][3] = head[1][3];
-  else
-    noSnake[snakeSize][2] = head[1][2];
-    noSnake[snakeSize][3] = head[1][3] + WIDTH_SNAKE;
-  end
-
-  bodySnake[snakeSize][1] = noSnake;
-
-  noDirecao[snakeSize] = {};
-  noDirecao[snakeSize][1] = head[2][1];
-  if head[2][1] == 'F' or head[2][1] == 'B' then
-    noDirecao[snakeSize][2] = head[2][2] + WIDTH_SNAKE;
-    noDirecao[snakeSize][3] = head[2][3] ;
-  else
-    noDirecao[snakeSize][2] = head[2][2];
-    noDirecao[snakeSize][3] = head[2][3] + WIDTH_SNAKE;
-  end
-  
-  bodySnake[snakeSize][2] = noDirecao;
-end
-
--- verifica se a colisão entre entidades(entre comida e a frente da snake)
-function colision()
-  local head = bodySnake[snakeSize][1][snakeSize];
-  local consum = noFood;
-  return (head[2] <= (consum[2] + WIDTH_FOOD)  and head[3] <= (consum[3] + WIDTH_FOOD) 
-    and consum[2] <= (head[2] + WIDTH_SNAKE - 10) and consum[3] <= (head[3] + WIDTH_SNAKE - 10));
 end
 
 -- funcão para aguardar um tempo
