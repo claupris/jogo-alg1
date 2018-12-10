@@ -218,7 +218,7 @@ function love.draw()
     if intersect then
       score = score + 50;      
       noFood = positionFood();
-      addNoSnake();
+      --addNoSnake();
     end    
     love.graphics.draw(noFood[1], noFood[2], noFood[3]);
     love.graphics.print({{0, 0, 0, 1},'PONTOS: ' .. score}, WIDTH_CENARIO/2 + 110, 100, 0, 2, 2);
